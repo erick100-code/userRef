@@ -1,75 +1,96 @@
-import { useEffect, useReducer, useState } from "react";
+import { useReducer, useRef } from "react";
 import "./App.css";
 
-function reducer(state, action) {// state == valor,  action == mudar o valor
-  switch(action.type) {
-    case "add-tarefa":
-      return {
-        tasks: [
-          ...state.tasks,
-          { name: action.payload, isCompleted: false, }
-        ]
-      }
-    case "remove":
-      return {
-        tasks: state.tasks.filter(indice => indice.name != action.payload)
-       
-      }
-     case "complete":
- 
-        return {
-          tasks: state.tasks.map(indice => {
-            if (indice.name === action.payload) {
-              return {...indice, isCompleted: !indice.isCompleted}
-            }
+let style = {
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems:  'center',
+  gap: '30px',
+  margin: '30px 0px',
+}
 
-            return indice
-          })
-        }
-  
-    default:
-      return state
+function reducer(valor, action) {
+
+  switch(action.type) {
+    case "add":
+      return [
+        ...valor,
+        { name: action.payload, isCompleted: false }
+      ]
+      
+    case "remove":
+      return valor.filter(indice => indice.name != action.payload)
+    case "completed": 
+    
+      return (
+        valor.map(indice => {
+          if (indice.name == action.payload) {
+            return {...indice, isCompleted: !indice.isCompleted}
+          }
+
+          return indice
+        })
+      )
+          
   }
 }
 
+
 function App() {
 
-  const [state, dispatch] = useReducer(reducer, { tasks: [] })
-  const [inputValue, setInputVelue] = useState("")
+  const [valueAtual, dispatch] = useReducer(reducer, [])
+  const inp = useRef()
+  console.log(valueAtual)
 
-  useEffect(() => {
-    console.log(state)
-  },[state])
-
-
+  function tarefas(object) {
+    if (object.payload == "") {
+      window.alert("prencha o campo")
+    } else {
+      if (object.type == "add") {
+        let response = false
+        
+        valueAtual.map(indice => {
+          if (indice.name.trim() == object.payload.trim()) {
+            response = true
+          } 
+        })  
+      
+        if (response) {
+          window.alert("tarefa já existente")
+        } else {
+          dispatch(object)
+        }
+      } else {
+        dispatch(object)
+      }
+    }
+  }
 
   return (
     <div>
-      <input value={inputValue} onChange={(event) => setInputVelue(event.target.value)} />
+      <h1>adicione uma tarefa</h1>
+      <input type="text" ref={inp} />
       <button onClick={() => {
-        dispatch({ type: "add-tarefa", payload: inputValue })
-        setInputVelue("") 
-      }
-      }>adicionar</button>
+        tarefas({ type: "add", payload: inp.current.value});
+        inp.current.value = ""
+      
+      }}>adicionar Tarefa</button>
 
-      {state.tasks.length > 0 ? (
+      {valueAtual.length > 0 ? (
         <div>
-          {state.tasks.map(indice => {
+          { valueAtual.map(indice => {
             return (
-              <div key={indice.name} style={{display: "flex", gap: "5px", justifyContent: "center", margin: "30px", cursor: 'pointer'}}>
-                <p onClick={() => dispatch({ type: "complete", payload: indice.name })} style={ {backgroundColor: indice.isCompleted ? '#00ff00' : 'darkgray', padding: "20px", borderRadius: "5px"} } >{indice.name}</p>
-                
-                <button onClick={() => dispatch({ type: "remove", payload: indice.name })}>remover</button>
+              <div key={indice.name}style={style}>
+                <span onClick={() => tarefas({ type: "completed", payload: indice.name})} style={{background: indice.isCompleted ? '#00ff00' : 'darkGray',  padding: '15px 25px', color: 'white', borderRadius: '5px', cursor: 'pointer',}}>{indice.name}</span>
+                <button onClick={() => tarefas({ type: "remove", payload: indice.name})}>remover</button>
               </div>
             )
           })}
         </div>
-
-        ): ""}
-     
+      ): <div></div>}
     </div>
+  )
 
-  );  
 }
 
-export default App;
+export default App; 
